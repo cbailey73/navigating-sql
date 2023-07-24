@@ -154,7 +154,7 @@ function addEmployee() {
     .then((answers) => {
       // Fetch the role_id and salary based on the role_title entered by the user
       db.query(
-        'SELECT id, salary FROM roles WHERE title = ?',
+        'SELECT id FROM roles WHERE title = ?',
         [answers.role_title],
         (error, result) => {
           if (error) throw error;
