@@ -203,63 +203,62 @@ function addEmployee() {
 
 // Function to update an employee's role
 function updateEmployeeRole() {
-  inquirer
-    .prompt([
-      {
-        type: 'input',
-        name: 'employee_name',
-        message: "Enter the name of the employee you want to update (First Last):",
-      },
-      {
-        type: 'input',
-        name: 'new_role_title',
-        message: "Enter the new role title for the employee:",
-      },
-    ])
-    .then((answers) => {
-      // Fetch the employee_id based on the employee_name entered by the user
-      const [first_name, last_name] = answers.employee_name.split(' ');
-      db.query(
-        'SELECT id FROM employees WHERE first_name = ? AND last_name = ?',
-        [first_name, last_name],
-        (error, result) => {
-          if (error) throw error;
-          if (result.length === 0) {
-            console.log('Employee not found. Please try again.');
-            updateEmployeeRole(); // Prompt again if the employee doesn't exist
-          } else {
-            const employee_id = result[0].id;
-
-            // Fetch the role_id based on the new_role_title entered by the user
-            db.query(
-              'SELECT id FROM roles WHERE title = ?',
-              [answers.new_role_title],
-              (error, result) => {
-                if (error) throw error;
-                if (result.length === 0) {
-                  console.log('Invalid role title. Please try again.');
-                  updateEmployeeRole(); // Prompt again if the role title doesn't exist
-                } else {
-                  const new_role_id = result[0].id;
-
-                  // Update the employee's role in the database
-                  db.query(
-                    'UPDATE employees SET role_id = ? WHERE id = ?',
-                    [new_role_id, employee_id],
-                    (error) => {
-                      if (error) throw error;
-                      console.log('Employee role updated successfully!');
-                      mainMenu();
-                    }
-                  );
-                }
-              }
-            );
-          }
-        }
-      );
+  // Fetch the list of current employees from the database
+  db.query('SELECT id, first_name, last_name FROM employees', (error, results) => {
+    if (error) throw error;
+    const employeeChoices = results.map((employee) => {
+      return {
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id,
+      };
     });
+
+    inquirer
+      .prompt([
+        {
+          type: 'list',
+          name: 'employee_id',
+          message: 'Select the employee you want to update:',
+          choices: employeeChoices,
+        },
+        {
+          type: 'input',
+          name: 'new_role_title',
+          message: "Enter the new role title for the employee:",
+        },
+      ])
+      .then((answers) => {
+        const employee_id = answers.employee_id;
+
+        // Fetch the role_id based on the new_role_title entered by the user
+        db.query(
+          'SELECT id FROM roles WHERE title = ?',
+          [answers.new_role_title],
+          (err, result) => {
+            if (err) throw err;
+            if (result.length === 0) {
+              console.log('Invalid role title. Please try again.');
+              updateEmployeeRole(); // Prompt again if the role title doesn't exist
+            } else {
+              const new_role_id = result[0].id;
+
+              // Update the employee's role in the database
+              db.query(
+                'UPDATE employees SET role_id = ? WHERE id = ?',
+                [new_role_id, employee_id],
+                (error) => {
+                  if (error) throw error;
+                  console.log('Employee role updated successfully!');
+                  mainMenu();
+                }
+              );
+            }
+          }
+        );
+      });
+  });
 }
+
 
 
 
