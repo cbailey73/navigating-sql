@@ -24,7 +24,7 @@ function viewAllDepartments() {
 // Function to view all roles with department titles
 function viewAllRoles() {
   db.query(
-    `SELECT roles.*, departments.title AS department_title
+    `SELECT roles.id, roles.title, roles.salary, departments.title AS department
     FROM roles
     JOIN departments ON roles.department_id = departments.id`,
     (error, results) => {
@@ -38,7 +38,8 @@ function viewAllRoles() {
 // Function to view all employees with role, salary, and department titles
 function viewAllEmployees() {
   db.query(
-    `SELECT employees.*, roles.title AS role_title, roles.salary AS role_salary, departments.title AS department_title
+    `SELECT employees.id, employees.first_name, employees.last_name,
+    roles.title AS job_title, roles.salary AS salary, departments.title AS department, employees.manager_names
     FROM employees
     JOIN roles ON employees.role_id = roles.id
     JOIN departments ON employees.department_id = departments.id`,
@@ -148,7 +149,7 @@ function addEmployee() {
         type: 'list',
         name: 'manager_names',
         message: "Select the manager for this employee:",
-        choices: ['Bob', 'Sally', 'Margaret', 'Horace'], // Populate this array with available manager names
+        choices: ['Bob', 'Sally', 'Margaret', 'Horace', 'null'], // Populate this array with available manager names
       },
     ])
     .then((answers) => {
@@ -259,6 +260,48 @@ function updateEmployeeRole() {
   });
 }
 
+// Function to update an employee's manager
+function updateEmployeeManager() {
+  // Fetch the list of current employees from the database
+  db.query('SELECT id, first_name, last_name FROM employees', (error, results) => {
+    if (error) throw error;
+    const employeeChoices = results.map((employee) => {
+      return {
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id,
+      };
+    });
+
+    inquirer
+      .prompt([
+        {
+          type: 'list',
+          name: 'employee_id',
+          message: 'Select the employee you want to update:',
+          choices: employeeChoices,
+        },
+        {
+          type: 'list',
+          name: 'new_manager_name',
+          message: "Enter the employee's new manager:",
+          choices: ['Bob', 'Sally', 'Margaret', 'Horace', 'null']
+        },
+      ])
+      .then((answers) => {
+        const employee_id = answers.employee_id;
+
+        db.query(
+          'UPDATE employees SET manager_names = ? WHERE id = ?',
+          [answers.new_manager_name, employee_id],
+          (error) => {
+            if (error) throw error;
+            console.log("Employee's manager updated successfully!");
+            mainMenu();
+          }
+        )
+      });
+  });
+}
 
 
 
@@ -278,6 +321,7 @@ function mainMenu() {
           'Add a role',
           'Add an employee',
           'Update an employee role',
+          'Update an employee manager',
           'Exit',
         ],
       },
@@ -304,6 +348,9 @@ function mainMenu() {
           break;
         case 'Update an employee role':
           updateEmployeeRole();
+          break;
+        case 'Update an employee manager':
+          updateEmployeeManager();
           break;
         case 'Exit':
           console.log('Goodbye!');
