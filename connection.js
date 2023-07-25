@@ -24,7 +24,7 @@ function viewAllDepartments() {
 // Function to view all roles with department titles
 function viewAllRoles() {
   db.query(
-    `SELECT roles.*, departments.title AS department_title
+    `SELECT roles.id, roles.title, roles.salary, departments.title AS department
     FROM roles
     JOIN departments ON roles.department_id = departments.id`,
     (error, results) => {
@@ -38,7 +38,8 @@ function viewAllRoles() {
 // Function to view all employees with role, salary, and department titles
 function viewAllEmployees() {
   db.query(
-    `SELECT employees.*, roles.title AS role_title, roles.salary AS role_salary, departments.title AS department_title
+    `SELECT employees.id, employees.first_name, employees.last_name,
+    roles.title AS job_title, roles.salary AS salary, departments.title AS department, employees.manager_names
     FROM employees
     JOIN roles ON employees.role_id = roles.id
     JOIN departments ON employees.department_id = departments.id`,
@@ -140,21 +141,16 @@ function addEmployee() {
         message: "Enter the employee's role title:",
       },
       {
-        type: 'input',
-        name: 'department_title', // Prompt for the department title instead of department_id
-        message: "Enter the employee's department title:",
-      },
-      {
         type: 'list',
         name: 'manager_names',
         message: "Select the manager for this employee:",
-        choices: ['Bob', 'Sally', 'Margaret', 'Horace'], // Populate this array with available manager names
+        choices: ['Bob', 'Sally', 'Margaret', 'Horace', 'null'], // Populate this array with available manager names
       },
     ])
     .then((answers) => {
-      // Fetch the role_id and salary based on the role_title entered by the user
+      // Fetch the role_id and department_id based on the role_title entered by the user
       db.query(
-        'SELECT id FROM roles WHERE title = ?',
+        'SELECT id, department_id FROM roles WHERE title = ?',
         [answers.role_title],
         (error, result) => {
           if (error) throw error;
@@ -163,102 +159,131 @@ function addEmployee() {
             addEmployee(); // Prompt again if the role title doesn't exist
           } else {
             const role_id = result[0].id;
+            const department_id = result[0].department_id;
 
-            // Fetch the department_id based on the department_title entered by the user
+            // Insert the employee record with role_id and department_id
             db.query(
-              'SELECT id FROM departments WHERE title = ?',
-              [answers.department_title],
-              (error, result) => {
+              'INSERT INTO employees (first_name, last_name, role_id, department_id, manager_names) VALUES (?, ?, ?, ?, ?)',
+              [
+                answers.first_name,
+                answers.last_name,
+                role_id,
+                department_id,
+                answers.manager_names
+              ],
+              (error) => {
                 if (error) throw error;
-                if (result.length === 0) {
-                  console.log('Invalid department title. Please try again.');
-                  addEmployee(); // Prompt again if the department title doesn't exist
-                } else {
-                  const department_id = result[0].id;
-
-                  // Insert the employee record with both role_title, role_id, and salary
-                  db.query(
-                    'INSERT INTO employees (first_name, last_name, role_id, department_id, manager_names) VALUES (?, ?, ?, ?, ?)',
-                    [
-                      answers.first_name,
-                      answers.last_name,
-                      role_id,
-                      department_id,
-                      answers.manager_names // Save manager names as a comma-separated string
-                    ],
-                    (error) => {
-                      if (error) throw error;
-                      console.log('Employee added successfully!');
-                      mainMenu();
-                    }
-                  );
-                }
+                console.log('Employee added successfully!');
+                mainMenu();
               }
             );
           }
         }
       );
     });
-};
+}
+
 
 // Function to update an employee's role
 function updateEmployeeRole() {
-  inquirer
-    .prompt([
-      {
-        type: 'input',
-        name: 'employee_name',
-        message: "Enter the name of the employee you want to update (First Last):",
-      },
-      {
-        type: 'input',
-        name: 'new_role_title',
-        message: "Enter the new role title for the employee:",
-      },
-    ])
-    .then((answers) => {
-      // Fetch the employee_id based on the employee_name entered by the user
-      const [first_name, last_name] = answers.employee_name.split(' ');
-      db.query(
-        'SELECT id FROM employees WHERE first_name = ? AND last_name = ?',
-        [first_name, last_name],
-        (error, result) => {
-          if (error) throw error;
-          if (result.length === 0) {
-            console.log('Employee not found. Please try again.');
-            updateEmployeeRole(); // Prompt again if the employee doesn't exist
-          } else {
-            const employee_id = result[0].id;
-
-            // Fetch the role_id based on the new_role_title entered by the user
-            db.query(
-              'SELECT id FROM roles WHERE title = ?',
-              [answers.new_role_title],
-              (error, result) => {
-                if (error) throw error;
-                if (result.length === 0) {
-                  console.log('Invalid role title. Please try again.');
-                  updateEmployeeRole(); // Prompt again if the role title doesn't exist
-                } else {
-                  const new_role_id = result[0].id;
-
-                  // Update the employee's role in the database
-                  db.query(
-                    'UPDATE employees SET role_id = ? WHERE id = ?',
-                    [new_role_id, employee_id],
-                    (error) => {
-                      if (error) throw error;
-                      console.log('Employee role updated successfully!');
-                      mainMenu();
-                    }
-                  );
-                }
-              }
-            );
-          }
-        }
-      );
+  // Fetch the list of current employees from the database
+  db.query('SELECT id, first_name, last_name FROM employees', (error, results) => {
+    if (error) throw error;
+    const employeeChoices = results.map((employee) => {
+      return {
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id,
+      };
     });
+
+    inquirer
+      .prompt([
+        {
+          type: 'list',
+          name: 'employee_id',
+          message: 'Select the employee you want to update:',
+          choices: employeeChoices,
+        },
+        {
+          type: 'input',
+          name: 'new_role_title',
+          message: "Enter the new role title for the employee:",
+        },
+      ])
+      .then((answers) => {
+        const employee_id = answers.employee_id;
+
+        // Fetch the role_id based on the new_role_title entered by the user
+        db.query(
+          'SELECT id, department_id FROM roles WHERE title = ?',
+          [answers.new_role_title],
+          (err, result) => {
+            if (err) throw err;
+            if (result.length === 0) {
+              console.log('Invalid role title. Please try again.');
+              updateEmployeeRole(); // Prompt again if the role title doesn't exist
+            } else {
+              const new_role_id = result[0].id;
+              const new_department_id = result[0].department_id;
+
+              // Update the employee's role in the database
+              db.query(
+                'UPDATE employees SET role_id = ?, department_id = ? WHERE id = ?',
+                [new_role_id, new_department_id, employee_id],
+                (error) => {
+                  if (error) throw error;
+                  console.log('Employee role updated successfully!');
+                  mainMenu();
+                }
+              );
+            }
+          }
+        );
+      });
+  });
+}
+
+// Function to update an employee's manager
+function updateEmployeeManager() {
+  // Fetch the list of current employees from the database
+  db.query('SELECT id, first_name, last_name FROM employees', (error, results) => {
+    if (error) throw error;
+    const employeeChoices = results.map((employee) => {
+      return {
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id,
+      };
+    });
+
+    inquirer
+      .prompt([
+        {
+          type: 'list',
+          name: 'employee_id',
+          message: 'Select the employee you want to update:',
+          choices: employeeChoices,
+        },
+        {
+          type: 'list',
+          name: 'new_manager_name',
+          message: "Enter the employee's new manager:",
+          choices: ['Bob', 'Sally', 'Margaret', 'Horace', 'null']
+        },
+      ])
+      .then((answers) => {
+        const employee_id = answers.employee_id;
+
+        db.query(
+          'UPDATE employees SET manager_names = ? WHERE id = ?',
+          [answers.new_manager_name, employee_id],
+          (error) => {
+            if (error) throw error;
+            console.log("Employee's manager updated successfully!");
+            mainMenu();
+          }
+        )
+      });
+  });
 }
 
 
@@ -279,6 +304,7 @@ function mainMenu() {
           'Add a role',
           'Add an employee',
           'Update an employee role',
+          'Update an employee manager',
           'Exit',
         ],
       },
@@ -305,6 +331,9 @@ function mainMenu() {
           break;
         case 'Update an employee role':
           updateEmployeeRole();
+          break;
+        case 'Update an employee manager':
+          updateEmployeeManager();
           break;
         case 'Exit':
           console.log('Goodbye!');
