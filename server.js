@@ -147,7 +147,7 @@ function addEmployee() {
       {
         type: 'list',
         name: 'manager_names',
-        message: "Select the manager(s) for this employee:",
+        message: "Select the manager for this employee:",
         choices: ['Bob', 'Sally', 'Margaret', 'Horace'], // Populate this array with available manager names
       },
     ])
@@ -222,8 +222,8 @@ function updateEmployeeRole() {
       db.query(
         'SELECT id FROM employees WHERE first_name = ? AND last_name = ?',
         [first_name, last_name],
-        (err, result) => {
-          if (err) throw err;
+        (error, result) => {
+          if (error) throw error;
           if (result.length === 0) {
             console.log('Employee not found. Please try again.');
             updateEmployeeRole(); // Prompt again if the employee doesn't exist
@@ -234,8 +234,8 @@ function updateEmployeeRole() {
             db.query(
               'SELECT id FROM roles WHERE title = ?',
               [answers.new_role_title],
-              (err, result) => {
-                if (err) throw err;
+              (error, result) => {
+                if (error) throw error;
                 if (result.length === 0) {
                   console.log('Invalid role title. Please try again.');
                   updateEmployeeRole(); // Prompt again if the role title doesn't exist
