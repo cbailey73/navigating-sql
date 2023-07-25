@@ -228,8 +228,8 @@ function updateEmployeeRole() {
 
               // Update the employee's role in the database
               db.query(
-                'UPDATE employees SET role_id = ? WHERE id = ?',
-                [new_role_id, employee_id],
+                'UPDATE employees SET role_id = ?, department_id = ? WHERE id = ?',
+                [new_role_id, new_department_id, employee_id],
                 (error) => {
                   if (error) throw error;
                   console.log('Employee role updated successfully!');
