@@ -141,11 +141,6 @@ function addEmployee() {
         message: "Enter the employee's role title:",
       },
       {
-        type: 'input',
-        name: 'department_title', // Prompt for the department title instead of department_id
-        message: "Enter the employee's department title:",
-      },
-      {
         type: 'list',
         name: 'manager_names',
         message: "Select the manager for this employee:",
@@ -153,9 +148,9 @@ function addEmployee() {
       },
     ])
     .then((answers) => {
-      // Fetch the role_id and salary based on the role_title entered by the user
+      // Fetch the role_id and department_id based on the role_title entered by the user
       db.query(
-        'SELECT id FROM roles WHERE title = ?',
+        'SELECT id, department_id FROM roles WHERE title = ?',
         [answers.role_title],
         (error, result) => {
           if (error) throw error;
@@ -164,43 +159,30 @@ function addEmployee() {
             addEmployee(); // Prompt again if the role title doesn't exist
           } else {
             const role_id = result[0].id;
+            const department_id = result[0].department_id;
 
-            // Fetch the department_id based on the department_title entered by the user
+            // Insert the employee record with role_id and department_id
             db.query(
-              'SELECT id FROM departments WHERE title = ?',
-              [answers.department_title],
-              (error, result) => {
+              'INSERT INTO employees (first_name, last_name, role_id, department_id, manager_names) VALUES (?, ?, ?, ?, ?)',
+              [
+                answers.first_name,
+                answers.last_name,
+                role_id,
+                department_id,
+                answers.manager_names
+              ],
+              (error) => {
                 if (error) throw error;
-                if (result.length === 0) {
-                  console.log('Invalid department title. Please try again.');
-                  addEmployee(); // Prompt again if the department title doesn't exist
-                } else {
-                  const department_id = result[0].id;
-
-                  // Insert the employee record with both role_title, role_id, and salary
-                  db.query(
-                    'INSERT INTO employees (first_name, last_name, role_id, department_id, manager_names) VALUES (?, ?, ?, ?, ?)',
-                    [
-                      answers.first_name,
-                      answers.last_name,
-                      role_id,
-                      department_id,
-                      answers.manager_names // Save manager names as a comma-separated string
-                    ],
-                    (error) => {
-                      if (error) throw error;
-                      console.log('Employee added successfully!');
-                      mainMenu();
-                    }
-                  );
-                }
+                console.log('Employee added successfully!');
+                mainMenu();
               }
             );
           }
         }
       );
     });
-};
+}
+
 
 // Function to update an employee's role
 function updateEmployeeRole() {
@@ -233,7 +215,7 @@ function updateEmployeeRole() {
 
         // Fetch the role_id based on the new_role_title entered by the user
         db.query(
-          'SELECT id FROM roles WHERE title = ?',
+          'SELECT id, department_id FROM roles WHERE title = ?',
           [answers.new_role_title],
           (err, result) => {
             if (err) throw err;
@@ -242,6 +224,7 @@ function updateEmployeeRole() {
               updateEmployeeRole(); // Prompt again if the role title doesn't exist
             } else {
               const new_role_id = result[0].id;
+              const new_department_id = result[0].department_id;
 
               // Update the employee's role in the database
               db.query(
