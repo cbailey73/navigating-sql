@@ -1,7 +1,7 @@
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
 
-// Connection to sql databases
+// Connection to sql database
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
@@ -21,7 +21,7 @@ function viewAllDepartments() {
   });
 };
 
-// Function to view all roles with department titles
+// Function to view all roles
 function viewAllRoles() {
   db.query(
     `SELECT roles.id, roles.title, roles.salary, departments.title AS department
@@ -35,7 +35,7 @@ function viewAllRoles() {
   );
 };
 
-// Function to view all employees with role, salary, and department titles
+// Function to view all employees
 function viewAllEmployees() {
   db.query(
     `SELECT employees.id, employees.first_name, employees.last_name,
@@ -137,15 +137,15 @@ function addEmployee() {
       },
       {
         type: 'input',
-        name: 'role_title', // Prompt for the role title instead of role_id
+        name: 'role_title',
         message: "Enter the employee's role title:",
       },
       {
         type: 'list',
         name: 'manager_names',
         message: "Select the manager for this employee:",
-        choices: ['Bob Douglas', 'Sally Saltgrass', 'Margaret Moose', 'Horace Horsemouth', 'null'], // Populate this array with available manager names
-      },
+        choices: ['Bob Douglas', 'Sally Saltgrass', 'Margaret Moose', 'Horace Horsemouth', 'null']
+      }
     ])
     .then((answers) => {
       // Fetch the role_id and department_id based on the role_title entered by the user
@@ -156,7 +156,7 @@ function addEmployee() {
           if (error) throw error;
           if (result.length === 0) {
             console.log('Invalid role title. Please try again.');
-            addEmployee(); // Prompt again if the role title doesn't exist
+            addEmployee(); 
           } else {
             const role_id = result[0].id;
             const department_id = result[0].department_id;
@@ -373,11 +373,11 @@ function mainMenu() {
           break;
         case 'Exit':
           console.log('Goodbye!');
-          db.end(); // Close the database connection before exiting
+          db.end();
           process.exit(0);
         default:
           console.log('Invalid choice. Please try again.');
-          mainMenu(); // Prompt again for an invalid choice
+          mainMenu(); 
       }
     });
 };
