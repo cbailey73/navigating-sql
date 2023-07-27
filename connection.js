@@ -7,9 +7,6 @@ const db = mysql.createConnection({
   user: 'root',
   password: 'firework4412',
   database: 'business_db',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
 });  
 
 // Function to view all departments
