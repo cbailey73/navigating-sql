@@ -267,7 +267,7 @@ function updateEmployeeManager() {
           type: 'list',
           name: 'new_manager_name',
           message: "Enter the employee's new manager:",
-          choices: ['Bob', 'Sally', 'Margaret', 'Horace', 'null']
+          choices: ['Bob Douglas', 'Sally Saltgrass', 'Margaret Moose', 'Horace Horsemouth', 'null']
         },
       ])
       .then((answers) => {
