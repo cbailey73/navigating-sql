@@ -144,7 +144,7 @@ function addEmployee() {
         type: 'list',
         name: 'manager_names',
         message: "Select the manager for this employee:",
-        choices: ['Bob', 'Sally', 'Margaret', 'Horace', 'null'], // Populate this array with available manager names
+        choices: ['Bob Douglas', 'Sally Saltgrass', 'Margaret Moose', 'Horace Horsemouth', 'null'], // Populate this array with available manager names
       },
     ])
     .then((answers) => {
@@ -286,6 +286,38 @@ function updateEmployeeManager() {
   });
 }
 
+function deleteEmployee() {
+  db.query('SELECT id, first_name, last_name FROM employees', (error, results) => {
+    if (error) throw error;
+    const employeeChoices = results.map((employee) => {
+      return {
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id,
+      };
+    });
+  inquirer.prompt([
+    {
+      type: 'list',
+      name: 'employee_id',
+      message: 'Select the employee you want to update:',
+      choices: employeeChoices,
+    }
+    ]).then((answers) => {
+      const employee_id = answers.employee_id;
+
+      db.query('DELETE FROM employees WHERE id = ?',
+      [employee_id],
+      (error) => {
+        if (error) throw error;
+        console.log("Employee deleted successfully!");
+        mainMenu();
+      }
+      )
+
+    })
+  })
+}
+
 
 
 // Function to display the main menu
@@ -305,6 +337,7 @@ function mainMenu() {
           'Add an employee',
           'Update an employee role',
           'Update an employee manager',
+          'Delete an employee',
           'Exit',
         ],
       },
@@ -334,6 +367,9 @@ function mainMenu() {
           break;
         case 'Update an employee manager':
           updateEmployeeManager();
+          break;
+        case 'Delete an employee':
+          deleteEmployee();
           break;
         case 'Exit':
           console.log('Goodbye!');
