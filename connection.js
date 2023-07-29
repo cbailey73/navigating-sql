@@ -35,18 +35,26 @@ function viewAllRoles() {
 // Function to view all employees
 function viewAllEmployees() {
   db.query(
-    `SELECT employees.id, employees.first_name, employees.last_name,
-    roles.title AS job_title, roles.salary AS salary, departments.title AS department, employees.manager_names
+    `SELECT 
+      employees.id,
+      employees.first_name,
+      employees.last_name,
+      roles.title AS job_title,
+      departments.title as department,
+      roles.salary AS salary,
+      employees.manager_id,
+      CONCAT(manager.first_name, ' ', manager.last_name) AS manager_names
     FROM employees
     JOIN roles ON employees.role_id = roles.id
-    JOIN departments ON employees.department_id = departments.id`,
+    JOIN departments ON roles.department_id = departments.id
+    LEFT JOIN employees AS manager ON employees.manager_id = manager.id`,
     (error, results) => {
       if (error) throw error;
       console.table(results);
       mainMenu();
     }
   );
-};
+}
 
 
 // Function to add a department
@@ -120,65 +128,80 @@ function addRole() {
 
 // Function to add an employee
 function addEmployee() {
-  inquirer
-    .prompt([
-      {
-        type: 'input',
-        name: 'first_name',
-        message: "Enter the employee's first name:",
-      },
-      {
-        type: 'input',
-        name: 'last_name',
-        message: "Enter the employee's last name:",
-      },
-      {
-        type: 'input',
-        name: 'role_title',
-        message: "Enter the employee's role title:",
-      },
-      {
-        type: 'list',
-        name: 'manager_names',
-        message: "Select the manager for this employee:",
-        choices: ['Bob Douglas', 'Sally Saltgrass', 'Margaret Moose', 'Horace Horsemouth', 'null']
-      }
-    ])
-    .then((answers) => {
-      // Fetch the role_id and department_id based on the role_title entered by the user
-      db.query(
-        'SELECT id, department_id FROM roles WHERE title = ?',
-        [answers.role_title],
-        (error, result) => {
-          if (error) throw error;
-          if (result.length === 0) {
-            console.log('Invalid role title. Please try again.');
-            addEmployee(); 
-          } else {
-            const role_id = result[0].id;
-            const department_id = result[0].department_id;
+  db.query(
+    'SELECT id, first_name, last_name FROM employees WHERE manager_id IS NULL',
+    (error, results) => {
+      if (error) throw error;
+      const managerNames = results.map((manager) => {
+        return {
+          name: `${manager.first_name} ${manager.last_name}`,
+          value: manager.id,
+        };
+      });
 
-            // Insert the employee record with role_id and department_id
-            db.query(
-              'INSERT INTO employees (first_name, last_name, role_id, department_id, manager_names) VALUES (?, ?, ?, ?, ?)',
-              [
-                answers.first_name,
-                answers.last_name,
-                role_id,
-                department_id,
-                answers.manager_names
-              ],
-              (error) => {
-                if (error) throw error;
-                console.log('Employee added successfully!');
-                mainMenu();
+      // Add the option for 'null' manager name
+      managerNames.push("None");
+
+      inquirer
+        .prompt([
+          {
+            type: 'input',
+            name: 'first_name',
+            message: "Enter the employee's first name:",
+          },
+          {
+            type: 'input',
+            name: 'last_name',
+            message: "Enter the employee's last name:",
+          },
+          {
+            type: 'input',
+            name: 'role_title',
+            message: "Enter the employee's role title:",
+          },
+          {
+            type: 'list',
+            name: 'manager_id',
+            message: "Select the manager for this employee:",
+            choices: managerNames,
+          },
+        ])
+        .then((answers) => {
+          // Fetch the role_id and department_id based on the role_title entered by the user
+          db.query(
+            'SELECT id FROM roles WHERE title = ?',
+            [answers.role_title],
+            (error, result) => {
+              if (error) throw error;
+              if (result.length === 0) {
+                console.log('Invalid role title. Please try again.');
+                addEmployee();
+              } else {
+                const role_id = result[0].id;
+
+                // Insert the employee record with role_id, department_id, and manager_id
+                db.query(
+                  'INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)',
+                  [
+                    answers.first_name,
+                    answers.last_name,
+                    role_id,
+                    answers.manager_id,
+                  ],
+                  (error) => {
+                    if (error) throw error;
+                    console.log('Employee added successfully!');
+                    mainMenu();
+                  }
+                );
               }
-            );
-          }
-        }
-      );
-    });
+            }
+          );
+        });
+    }
+  );
 }
+
 
 
 // Function to update an employee's role
@@ -264,7 +287,7 @@ function updateEmployeeManager() {
           type: 'list',
           name: 'new_manager_name',
           message: "Enter the employee's new manager:",
-          choices: ['Bob Douglas', 'Sally Saltgrass', 'Margaret Moose', 'Horace Horsemouth', 'null']
+          choices: ['Bob Douglas', 'Sally Saltgrass', 'Margaret Moose', 'Horace Horsemouth', 'None']
         },
       ])
       .then((answers) => {

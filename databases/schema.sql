@@ -22,17 +22,18 @@ CREATE TABLE employees (
     last_name VARCHAR(80) NOT NULL,
     role_id INT,
     FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE SET NULL,
-    manager_names TEXT NOT NULL
+    manager_id INT,
+    FOREIGN KEY (manager_id) REFERENCES employees (id) ON DELETE SET NULL
 );
 
-SELECT roles.*, departments.title AS department_title
-FROM roles
-JOIN departments ON roles.department_id = departments.id;
+-- SELECT roles.*, departments.title AS department_title
+-- FROM roles
+-- JOIN departments ON roles.department_id = departments.id;
 
-SELECT employees.*, roles.title AS role_title, departments.title AS department_title
-FROM employees
-JOIN roles ON employees.role_id = roles.id
-JOIN departments ON employees.department_id = departments.id;
+-- SELECT employees.*, roles.title AS role_title, departments.title AS department_title
+-- FROM employees
+-- JOIN roles ON employees.role_id = roles.id
+-- JOIN departments ON employees.department_id = departments.id;
 
 -- CREATE TABLE employees (
 --     id INT AUTO_INCREMENT PRIMARY KEY,
