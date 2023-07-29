@@ -310,10 +310,14 @@ function updateEmployeeManager() {
   });
 }
 
-// Start new here
+// Function to view the total budget of a given department
 function viewDepartmentBudget() {
-  db.query('SELECT * FROM departments', (error, departments) => {
+  db.query('SELECT * FROM departments', (error, results) => {
     if (error) throw error;
+    const departmentChoices = results.map((department) => ({
+      name: department.title,
+      value: department.id,
+    }))
 
     inquirer
       .prompt([
@@ -321,10 +325,7 @@ function viewDepartmentBudget() {
           type: 'list',
           name: 'departmentId',
           message: 'Select a department to view its budget:',
-          choices: departments.map((department) => ({
-            name: department.title,
-            value: department.id,
-          })),
+          choices: departmentChoices
         },
       ])
       .then((answers) => {
@@ -348,7 +349,41 @@ function viewDepartmentBudget() {
   });
 }
 
-// New ends here
+// Function to view employees by manager
+function mapEmployeeManagers() {
+  db.query(
+    'SELECT id, first_name, last_name FROM employees WHERE manager_id IS NULL',
+    (error, results) => {
+      if (error) throw error;
+      const managerNames = results.map((manager) => {
+        return {
+          name: `${manager.first_name} ${manager.last_name}`,
+          value: manager.id,
+        };
+      });
+
+      const managerFirstName = results[0].first_name;
+      const managerLastName = results[0].last_name;
+      const managerFullName = managerFirstName + ' ' + managerLastName;
+
+      inquirer.prompt([
+        {
+          type: 'list',
+          name: 'manager_id',
+          message: "Which manager's employees would you like to see?",
+          choices: managerNames
+        }
+      ]).then((answers) => {
+        db.query('SELECT id, first_name, last_name FROM employees WHERE manager_id = ?',
+        [answers.manager_id], (error, results) => {
+          if (error) throw error;
+          console.log(`Here are the people managed by ${managerFullName}:`);
+          console.table(results);
+          mainMenu();
+        })
+      })
+  }) // first query end 
+} // main function end 
 
 function deleteEmployee() {
   db.query('SELECT id, first_name, last_name FROM employees', (error, results) => {
@@ -402,6 +437,7 @@ function mainMenu() {
           'Update an employee role',
           'Update an employee manager',
           'View department budget',
+          'View employees by manager',
           'Delete an employee',
           'Exit',
         ],
@@ -435,6 +471,9 @@ function mainMenu() {
           break;
         case 'View department budget':
           viewDepartmentBudget();
+          break;
+        case 'View employees by manager':
+          mapEmployeeManagers();
           break;
         case 'Delete an employee':
           deleteEmployee();
