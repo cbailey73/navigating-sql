@@ -105,7 +105,7 @@ function addRole() {
         if (error) throw error;
         if (result.length === 0) {
           console.log('Invalid department name. Please try again.');
-          addRole(); // Prompt again if the department title doesn't exist
+          addRole();
         } else {
           const department_id = result[0].id;
 
@@ -138,7 +138,6 @@ function addEmployee() {
         };
       });
 
-      // Add the option for 'null' manager name
       managerNames.push({name: 'None', value: null});
 
       inquirer
@@ -166,7 +165,6 @@ function addEmployee() {
           },
         ])
         .then((answers) => {
-          // Fetch the role_id and department_id based on the role_title entered by the user
           db.query(
             'SELECT id FROM roles WHERE title = ?',
             [answers.role_title],
@@ -178,7 +176,6 @@ function addEmployee() {
               } else {
                 const role_id = result[0].id;
 
-                // Insert the employee record with role_id, department_id, and manager_id
                 db.query(
                   'INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)',
                   [
@@ -205,7 +202,6 @@ function addEmployee() {
 
 // Function to update an employee's role
 function updateEmployeeRole() {
-  // Fetch the list of current employees from the database
   db.query('SELECT id, first_name, last_name FROM employees', (error, results) => {
     if (error) throw error;
     const employeeChoices = results.map((employee) => {
@@ -232,7 +228,6 @@ function updateEmployeeRole() {
       .then((answers) => {
         const employee_id = answers.employee_id;
 
-        // Fetch the role_id based on the new_role_title entered by the user
         db.query(
           'SELECT id FROM roles WHERE title = ?',
           [answers.new_role_title],
@@ -240,11 +235,10 @@ function updateEmployeeRole() {
             if (err) throw err;
             if (result.length === 0) {
               console.log('Invalid role title. Please try again.');
-              updateEmployeeRole(); // Prompt again if the role title doesn't exist
+              updateEmployeeRole();
             } else {
               const new_role_id = result[0].id;
 
-              // Update the employee's role in the database
               db.query(
                 'UPDATE employees SET role_id = ? WHERE id = ?',
                 [new_role_id, employee_id],
@@ -263,7 +257,6 @@ function updateEmployeeRole() {
 
 // Function to update an employee's manager
 function updateEmployeeManager() {
-  // Fetch the list of current employees from the database
   db.query('SELECT id, first_name, last_name FROM employees', (error, results) => {
     if (error) throw error;
     const employeeChoices = results.map((employee) => {
@@ -284,7 +277,6 @@ function updateEmployeeManager() {
           };
         });
 
-      // Add the option for 'null' manager name
       managerNames.push({name: 'None', value: null});
 
     inquirer
@@ -315,7 +307,6 @@ function updateEmployeeManager() {
         )
       });
     });
-      //first query ending
   });
 }
 
