@@ -42,8 +42,7 @@ function viewAllEmployees() {
       roles.title AS job_title,
       departments.title as department,
       roles.salary AS salary,
-      employees.manager_id,
-      CONCAT(manager.first_name, ' ', manager.last_name) AS manager_names
+      CONCAT(manager.first_name, ' ', manager.last_name) AS manager_name
     FROM employees
     JOIN roles ON employees.role_id = roles.id
     JOIN departments ON roles.department_id = departments.id
@@ -70,7 +69,7 @@ function addDepartment() {
     .then((answers) => {
       db.query(
         'INSERT INTO departments (title) VALUES (?)',
-        [answers.name],
+        [answers.title],
         (error) => {
           if (error) throw error;
           console.log('Department added successfully!');
@@ -140,7 +139,7 @@ function addEmployee() {
       });
 
       // Add the option for 'null' manager name
-      managerNames.push("None");
+      managerNames.push({name: 'None', value: null});
 
       inquirer
         .prompt([
@@ -235,7 +234,7 @@ function updateEmployeeRole() {
 
         // Fetch the role_id based on the new_role_title entered by the user
         db.query(
-          'SELECT id, department_id FROM roles WHERE title = ?',
+          'SELECT id FROM roles WHERE title = ?',
           [answers.new_role_title],
           (err, result) => {
             if (err) throw err;
@@ -244,12 +243,11 @@ function updateEmployeeRole() {
               updateEmployeeRole(); // Prompt again if the role title doesn't exist
             } else {
               const new_role_id = result[0].id;
-              const new_department_id = result[0].department_id;
 
               // Update the employee's role in the database
               db.query(
-                'UPDATE employees SET role_id = ?, department_id = ? WHERE id = ?',
-                [new_role_id, new_department_id, employee_id],
+                'UPDATE employees SET role_id = ? WHERE id = ?',
+                [new_role_id, employee_id],
                 (error) => {
                   if (error) throw error;
                   console.log('Employee role updated successfully!');
@@ -275,27 +273,40 @@ function updateEmployeeManager() {
       };
     });
 
+    db.query(
+      'SELECT id, first_name, last_name FROM employees WHERE manager_id IS NULL',
+      (error, results) => {
+        if (error) throw error;
+        const managerNames = results.map((manager) => {
+          return {
+            name: `${manager.first_name} ${manager.last_name}`,
+            value: manager.id,
+          };
+        });
+
+      // Add the option for 'null' manager name
+      managerNames.push({name: 'None', value: null});
+
     inquirer
       .prompt([
         {
           type: 'list',
           name: 'employee_id',
           message: 'Select the employee you want to update:',
-          choices: employeeChoices,
+          choices: employeeChoices
         },
         {
           type: 'list',
-          name: 'new_manager_name',
+          name: 'new_manager_id',
           message: "Enter the employee's new manager:",
-          choices: ['Bob Douglas', 'Sally Saltgrass', 'Margaret Moose', 'Horace Horsemouth', 'None']
+          choices: managerNames
         },
       ])
       .then((answers) => {
-        const employee_id = answers.employee_id;
 
         db.query(
-          'UPDATE employees SET manager_names = ? WHERE id = ?',
-          [answers.new_manager_name, employee_id],
+          'UPDATE employees SET manager_id = ? WHERE id = ?',
+          [answers.new_manager_id, answers.employee_id],
           (error) => {
             if (error) throw error;
             console.log("Employee's manager updated successfully!");
@@ -303,6 +314,8 @@ function updateEmployeeManager() {
           }
         )
       });
+    });
+      //first query ending
   });
 }
 
