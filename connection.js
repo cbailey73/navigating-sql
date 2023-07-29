@@ -5,7 +5,7 @@ const inquirer = require('inquirer');
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: 'firework4412',
+  password: 'firework4412', // if using different password replace here
   database: 'business_db',
 });  
 
@@ -310,6 +310,46 @@ function updateEmployeeManager() {
   });
 }
 
+// Start new here
+function viewDepartmentBudget() {
+  db.query('SELECT * FROM departments', (error, departments) => {
+    if (error) throw error;
+
+    inquirer
+      .prompt([
+        {
+          type: 'list',
+          name: 'departmentId',
+          message: 'Select a department to view its budget:',
+          choices: departments.map((department) => ({
+            name: department.title,
+            value: department.id,
+          })),
+        },
+      ])
+      .then((answers) => {
+        const departmentId = answers.departmentId;
+
+        db.query(
+          `SELECT departments.title AS department, SUM(roles.salary) AS budget
+          FROM employees
+          JOIN roles ON employees.role_id = roles.id
+          JOIN departments ON roles.department_id = departments.id
+          WHERE departments.id = ?
+          GROUP BY departments.title`,
+          [departmentId],
+          (error, results) => {
+            if (error) throw error;
+            console.table(results);
+            mainMenu();
+          }
+        );
+      });
+  });
+}
+
+// New ends here
+
 function deleteEmployee() {
   db.query('SELECT id, first_name, last_name FROM employees', (error, results) => {
     if (error) throw error;
@@ -361,6 +401,7 @@ function mainMenu() {
           'Add an employee',
           'Update an employee role',
           'Update an employee manager',
+          'View department budget',
           'Delete an employee',
           'Exit',
         ],
@@ -391,6 +432,9 @@ function mainMenu() {
           break;
         case 'Update an employee manager':
           updateEmployeeManager();
+          break;
+        case 'View department budget':
+          viewDepartmentBudget();
           break;
         case 'Delete an employee':
           deleteEmployee();
