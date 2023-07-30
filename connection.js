@@ -9,6 +9,8 @@ const db = mysql.createConnection({
   database: 'business_db',
 });  
 
+////////////////////////////////////////////////////////// VIEW TABLES ///////////////////////////////////////
+
 // Function to view all departments
 function viewAllDepartments() {
   db.query('SELECT * FROM departments', (error, results) => {
@@ -55,6 +57,7 @@ function viewAllEmployees() {
   );
 }
 
+///////////////////////////////////////////////////////////// ADD TO TABLES ///////////////////////////////
 
 // Function to add a department
 function addDepartment() {
@@ -193,6 +196,8 @@ function addEmployee() {
   });
 };
 
+//////////////////////////////////////////////////////// CHANGE EMPLOYEE QUALITIES ////////////////////////////
+
 // Function to update an employee's role
 function updateEmployeeRole() {
   // Fetch the list of current employees from the database
@@ -299,6 +304,8 @@ function updateEmployeeManager() {
     });
   });
 }
+
+///////////////////////////////////////////////////////////////// MISCELLANEOUS ///////////////////////////////
 
 // Function to view the total budget of a given department
 function viewDepartmentBudget() {
@@ -468,6 +475,8 @@ function stageRevolt() {
   });
 };
 
+//////////////////////////////////////////////////////////// MAIN MENU /////////////////////////////////////
+
 // Function to display the main menu
 function mainMenu() {
   inquirer
@@ -543,4 +552,3 @@ function mainMenu() {
 };
 
 mainMenu();
-
