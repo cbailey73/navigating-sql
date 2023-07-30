@@ -380,11 +380,12 @@ function mapEmployeeManagers() {
           console.log(`Here are the people managed by ${managerFullName}:`);
           console.table(results);
           mainMenu();
-        })
-      })
-  }) // first query end 
-} // main function end 
+        });
+      });
+  });
+};
 
+// Function to remove an employee from the database
 function deleteEmployee() {
   db.query('SELECT id, first_name, last_name FROM employees', (error, results) => {
     if (error) throw error;
@@ -460,7 +461,7 @@ function stageRevolt() {
               db.query('DELETE FROM departments WHERE id = 5', (error) => {
                 if (error) throw error;
 
-                db.query('UPDATE roles SET salary = 120000', (error) => {
+                db.query('UPDATE roles SET salary = 500000', (error) => {
                   if (error) throw error;
 
                   db.query('UPDATE employees SET manager_id = null', (error) => {
