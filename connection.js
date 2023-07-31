@@ -320,14 +320,12 @@ function viewDepartmentBudget() {
       .prompt([
         {
           type: 'list',
-          name: 'departmentId',
+          name: 'department_id',
           message: 'Select a department to view its budget:',
           choices: departmentChoices
         },
       ])
       .then((answers) => {
-        const departmentId = answers.departmentId;
-
         db.query(
           `SELECT departments.title AS department, SUM(roles.salary) AS budget
           FROM employees
@@ -335,7 +333,7 @@ function viewDepartmentBudget() {
           JOIN departments ON roles.department_id = departments.id
           WHERE departments.id = ?
           GROUP BY departments.title`,
-          [departmentId],
+          [answers.department_id],
           (error, results) => {
             if (error) throw error;
             console.table(results);
