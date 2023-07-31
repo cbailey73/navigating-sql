@@ -53,3 +53,6 @@ This tutorial was followed to use null syntax to identify managers: https://www.
 This tutorial was followed to map out query results into name-value pairs: https://forum.freecodecamp.org/t/how-to-use-map-function-in-react-js-with-api/476783/2
 
 This tutorial was followed to terminate the server upon user request: https://www.geeksforgeeks.org/node-js-process-exit-method/
+
+## Demonstration
+A video demonstrating the project's use can be seen here: https://app.screencast.com/4zNQ3JEQ2XiR6?tab=Details&conversation=U70PXWVIYLp8YJsLc14dl0
