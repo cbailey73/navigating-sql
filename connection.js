@@ -415,66 +415,6 @@ function deleteEmployee() {
   })
 }
 
-// Function to overthrow the corporate hierarchy
-function stageRevolt() {
-  console.warn('\x1b[31mThis might cause disruptions.\x1b[0m');
-
-  inquirer.prompt([
-    {
-      type: 'list',
-      name: 'response',
-      message: 'How big is your yacht?',
-      choices: ['Like, really big.', 'What?']
-    }
-  ]).then((answers) => {
-    if (answers.response === 'Like, really big.') {
-      console.log('Cool, just checking.');
-      mainMenu();
-    }
-
-    if (answers.response === 'What?') {
-      inquirer.prompt([
-        {
-          type: 'list',
-          name: 'the_ultimate_question',
-          message: 'Are you tired of the man keeping you down?',
-          choices: ['I am the man', 'Yes']
-        }
-      ]).then((answers) => {
-        if (answers.the_ultimate_question === 'I am the man') {
-          console.log('Oops');
-          db.end();
-          process.exit(0);
-        }
-    
-        if (answers.the_ultimate_question === 'Yes') {
-          console.log('Finally');
-          db.query('DELETE FROM employees WHERE role_id = 9', (error) => {
-            if (error) throw error;
-
-            db.query('DELETE FROM roles WHERE id = 9', (error) => {
-              if (error) throw error;
-
-              db.query('DELETE FROM departments WHERE id = 5', (error) => {
-                if (error) throw error;
-
-                db.query('UPDATE roles SET salary = 500000', (error) => {
-                  if (error) throw error;
-
-                  db.query('UPDATE employees SET manager_id = null', (error) => {
-                    if (error) throw error;
-                    mainMenu();
-                  });
-                });
-              });
-            });
-          });
-        }
-      });
-    }
-  });
-};
-
 //////////////////////////////////////////////////////////// MAIN MENU /////////////////////////////////////
 
 // Function to display the main menu
@@ -497,7 +437,6 @@ function mainMenu() {
           'View department budget',
           'View employees by manager',
           'Delete an employee',
-          'Quick question',
           'Exit',
         ],
       },
@@ -536,9 +475,6 @@ function mainMenu() {
           break;
         case 'Delete an employee':
           deleteEmployee();
-          break;
-        case 'Quick question':
-          stageRevolt();
           break;
         case 'Exit':
           console.log('Goodbye!');
