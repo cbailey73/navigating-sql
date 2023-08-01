@@ -357,10 +357,6 @@ function mapEmployeeManagers() {
         };
       });
 
-      const managerFirstName = results[0].first_name;
-      const managerLastName = results[0].last_name;
-      const managerFullName = managerFirstName + ' ' + managerLastName;
-
       inquirer.prompt([
         {
           type: 'list',
@@ -372,7 +368,6 @@ function mapEmployeeManagers() {
         db.query('SELECT id, first_name, last_name FROM employees WHERE manager_id = ?',
         [answers.manager_id], (error, results) => {
           if (error) throw error;
-          console.log(`Here are the people managed by ${managerFullName}:`);
           console.table(results);
           mainMenu();
         });
